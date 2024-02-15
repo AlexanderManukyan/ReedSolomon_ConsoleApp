@@ -1,0 +1,537 @@
+template<typename templ>
+bool polynomial<templ>::isEmpty() const {
+	return first == nullptr;
+}
+
+template<typename templ>
+typename polynomial<templ>::node* polynomial<templ>::partition(node* first, node* last) { 
+	node* pivot = first; 
+	node* front = first; 
+	pair<templ, int16_t> temp = make_pair(templ(0), 0); 
+	while (front && front != last) { 
+		if (front->power < last->power) { 
+			pivot = first; 
+			temp = make_pair(first->val, first->power); 
+			first->val = front->val;
+			first->power = front->power;
+			front->val = temp.first;
+			front->power = temp.second;
+			first = first->next; 
+		}
+		front = front->next; 
+	}
+	if (first) {
+		temp = make_pair(first->val, first->power); 
+		first->val = last->val;
+		first->power = last->power;
+		last->val = temp.first;
+		last->power = temp.second;
+	}
+	return pivot; 
+}
+
+template<typename templ>
+void polynomial<templ>::quickSort(node*& first, node*& last) {
+	if (first == last) { 
+		return;
+	}
+	else {
+		node* pivot = partition(first, last); 
+
+		if (pivot && first != pivot) { 
+			quickSort(first, pivot);
+		}
+
+		if (pivot && pivot->next) {
+			quickSort(pivot->next, last);
+		}
+
+	}
+}
+
+template<typename templ>
+void polynomial<templ>::quickSort() { 
+	quickSort(first, last);
+}
+
+template<typename templ>
+void polynomial<templ>::pushBack(const templ& val, int16_t power) { 
+	if (power < 0) {
+		throw invalid_argument("Cтепень должна быть положительной!\n");
+	}
+	if (val) {
+		node* nd = new node(val, power);
+		if (isEmpty()) { 
+			first = nd;
+			last = nd;
+			length++;
+			return;
+		}
+		else { 
+			node* seekNd = first;
+
+			while (seekNd) {
+				if (seekNd->power == nd->power) { 
+					seekNd->val += nd->val; 
+					break;
+				}
+				seekNd = seekNd->next;
+			}
+
+			if (!seekNd) {
+				node* tmp = last;
+				last->next = nd;
+				last = nd;
+				last->prev = tmp;
+				this->quickSort();
+				length++;
+			}
+		}
+	}
+}
+
+template<typename templ>
+void polynomial<templ>::pushBack(const node& nd) {
+	node* addNode = new node(nd);
+	addNode->next = 0;
+	addNode->prev = 0;
+	if (addNode->power < 0) {
+		throw invalid_argument("Cтепень должна быть положительной!\n");
+	}
+	if (nd.val) {
+		if (isEmpty()) {
+			first = addNode;
+			last = addNode;
+			length++;
+			return;
+		}
+		else {
+			node* seekNd = first;
+
+			while (seekNd) {
+				if (seekNd->power == addNode->power) {
+					seekNd->val += addNode->val;
+					break;
+				}
+				seekNd = seekNd->next;
+			}
+
+			if (!seekNd) {
+				node* tmp = last;
+				last->next = addNode;
+				last = addNode;
+				last->prev = tmp;
+				this->quickSort();
+				length++;
+			}
+		}
+	}
+}
+
+template<typename templ>
+void polynomial<templ>::print() const {
+	stringstream ss;
+	ss.precision(3);
+	if (!isEmpty()) {
+		node* nd = first;
+		while (nd) {
+			if (nd->val > 0) {
+				if (nd->power == 0) {
+					ss << "+" << nd->val;
+				}
+				else {
+					if (nd->val == 1) {
+						ss << "+x^(" << nd->power << ")";
+					}
+					else {
+						ss << "+" << nd->val << "x^(" << nd->power << ")";
+					}
+				}
+			}
+			else if (nd->val < 0) {
+				if (nd->power == 0) {
+					ss << nd->val;
+				}
+				else {
+					if (nd->val == -1) {
+						ss << "-x^(" << nd->power << ")";
+					}
+					else {
+						ss << nd->val << "x^(" << nd->power << ")";
+					}
+				}
+			}
+			nd = nd->next;
+		}
+
+		string res = ss.str();
+		if (res[0] == '+') {
+			res.erase(0, 1);
+		}
+		cout << res << endl << endl;
+	}
+	else {
+		cout << 0 << endl << endl;
+	}
+}
+
+template<typename templ>
+void polynomial<templ>::clear() {
+	if (!isEmpty()) {
+		node* tmp;
+		do {
+			tmp = this->first->next;
+			delete this->first;
+			this->first = tmp;
+		} while (tmp);
+		first = 0;
+		last = 0;
+		length = 0;
+	}
+}
+
+template<typename templ>
+int16_t polynomial<templ>::getLength() const {
+	return this->length;
+}
+
+template<typename templ>
+void polynomial<templ>::operator = (const polynomial& p) {
+	this->clear();
+	node* tmp = p.first;
+	while (tmp) {
+		this->pushBack(*tmp);
+		tmp = tmp->next;
+	}
+}
+
+template<typename templ>
+polynomial<templ> polynomial<templ>::operator + (const polynomial& p) const {
+	if (!isEmpty()) {
+		polynomial resP;
+		node* checkNd = first;
+		node* seekNd = p.first;
+		while (checkNd) {
+			resP.pushBack(checkNd->val, checkNd->power);
+			checkNd = checkNd->next;
+		}
+		while (seekNd) {
+			resP.pushBack(seekNd->val, seekNd->power);
+			seekNd = seekNd->next;
+		}
+		return resP;
+	}
+	else {
+		return p;
+	}
+}
+
+template<typename templ>
+polynomial<templ> polynomial<templ>::operator + (const templ& secObj) const {
+	polynomial resP;
+	if (!isEmpty()) {
+		node* checkNd = first;
+		while (checkNd) {
+			resP.pushBack(checkNd->val, checkNd->power);
+			checkNd = checkNd->next;
+		}
+	}
+	resP.pushBack(secObj, 0);
+	return resP;
+}
+
+template<typename templ>
+polynomial<templ> polynomial<templ>::operator - (const polynomial& p) const { 
+	polynomial resP;
+	if (!isEmpty()) {
+		node* checkNd = this->first;
+		node* seekNd = p.first;
+		while (checkNd) {
+			resP.pushBack(checkNd->val, checkNd->power);
+			checkNd = checkNd->next;
+		}
+		while (seekNd) {
+			resP.pushBack(-seekNd->val, seekNd->power);
+			seekNd = seekNd->next;
+		}
+		return resP;
+	}
+	else {
+		return -p;
+	}
+}
+
+template<typename templ>
+polynomial<templ> polynomial<templ>::operator - (const templ& secObj) const {
+	polynomial resP;
+	if (!isEmpty()) {
+		node* checkNd = this->first;
+		while (checkNd) {
+			resP.pushBack(checkNd->val, checkNd->power);
+			checkNd = checkNd->next;
+		}
+	}
+	resP.pushBack(-secObj, 0);
+	return resP;
+}
+
+template<typename templ>
+polynomial<templ> polynomial<templ>::operator - () const {
+	if (!isEmpty()) {
+		polynomial resP;
+		node* checkNd = this->first;
+		while (checkNd) {
+			resP.pushBack(-checkNd->val, checkNd->power);
+			checkNd = checkNd->next;
+		}
+		return resP;
+	}
+	else {
+		return *this;
+	}
+}
+
+template<typename templ>
+polynomial<templ> polynomial<templ>::operator * (const polynomial& p) const {
+	if (!isEmpty()) {
+		polynomial resP;
+		node* checkNd = this->first;
+		node* seekNd = p.first;
+		while (checkNd) {
+			while (seekNd) {
+				resP.pushBack(checkNd->val * seekNd->val, checkNd->power + seekNd->power);
+				seekNd = seekNd->next;
+			}
+			checkNd = checkNd->next;
+			seekNd = p.first;
+		}
+		return resP;
+	}
+	else {
+		return *this;
+	}
+}
+
+template<typename templ>
+polynomial<templ> polynomial<templ>::operator * (const templ& secObj) const {
+	if (!isEmpty()) {
+		polynomial resP;
+		node* checkNd = this->first;
+		while (checkNd) {
+			resP.pushBack(checkNd->val * secObj, checkNd->power);
+			checkNd = checkNd->next;
+		}
+		return resP;
+	}
+	else {
+		return *this;
+	}
+}
+
+template<typename templ>
+polynomial<templ> polynomial<templ>::operator / (const polynomial& p) const {
+	if (p.isEmpty()) {
+		throw invalid_argument("Делитель равен 0!\n");
+	}
+	else if (!isEmpty()) {
+		if (is_same<int, templ>::value) {
+			throw invalid_argument("Не разрешается работать с целочисленным типом, выберите вещественный");
+		}
+		else {
+			polynomial editP;
+			polynomial delP;
+			polynomial resP;
+			node* checkNd = this->first;
+			node* seekNd = p.first;
+			while (checkNd) {
+				editP.pushBack(checkNd->val, checkNd->power);
+				checkNd = checkNd->next;
+			}
+
+			while (seekNd) {
+				delP.pushBack(seekNd->val, seekNd->power);
+				seekNd = seekNd->next;
+			}
+
+			while (delP.last->power <= editP.last->power) {
+				polynomial multiP;
+				multiP.pushBack(editP.last->val / delP.last->val, editP.last->power - delP.last->power);
+				editP = editP - delP * multiP;
+				resP.pushBack(multiP.last->val, multiP.last->power);
+			}
+			return resP;
+		}
+	}
+	else {
+		return *this;
+	}
+}
+
+template<typename templ>
+polynomial<templ> polynomial<templ>::operator / (const templ& secObj) const {
+	if (secObj) {
+		node* tmp = this->first;
+		while (tmp) {
+			tmp->val /= secObj;
+			tmp = tmp->next;
+		}
+		return *this;
+	}
+	else {
+		throw invalid_argument("Делитель равен 0!\n");
+	}
+}
+
+template<typename templ>
+polynomial<templ> polynomial<templ>::operator % (const polynomial& p) const {
+	if (p.isEmpty()) {
+		throw invalid_argument("Делитель равен 0!\n");
+	}
+	else if (!isEmpty()) {
+		polynomial editP;
+		polynomial delP;
+		node* checkNd = this->first;
+		node* seekNd = p.first;
+		while (checkNd) {
+			editP.pushBack(checkNd->val, checkNd->power);
+			checkNd = checkNd->next;
+		}
+
+		while (seekNd) {
+			delP.pushBack(seekNd->val, seekNd->power);
+			seekNd = seekNd->next;
+		}
+
+		if (delP.length == 1 && !delP.first->power) {
+			return polynomial();
+		}
+
+		while (delP.last->power <= editP.last->power) {
+			polynomial multiP;
+			multiP.pushBack(editP.last->val / delP.last->val, editP.last->power - delP.last->power);
+			editP = editP - delP * multiP; // изменяем многочлен
+		}
+		return editP; // возвращаем остаток
+	}
+	else {
+		return *this;
+	}
+}
+
+template<typename templ>
+void polynomial<templ>::operator += (const polynomial& p) {
+	*this = *this + p;
+}
+
+template<typename templ>
+void polynomial<templ>::operator += (const templ& secObj) {
+	this->pushBack(secObj, 0);
+}
+
+template<typename templ>
+void polynomial<templ>::operator -= (const polynomial& p) {
+	*this = *this - p;
+}
+
+template<typename templ>
+void polynomial<templ>::operator -= (const templ& secObj) {
+	this->pushBack(-secObj, 0);
+}
+
+template<typename templ>
+void polynomial<templ>::operator *= (const polynomial& p) {
+	*this = *this * p;
+}
+
+template<typename templ>
+void polynomial<templ>::operator *= (const templ& secObj) {
+	*this = *this * secObj;
+}
+
+template<typename templ>
+void polynomial<templ>::operator /= (const polynomial& p) {
+	*this = *this / p;
+}
+
+template<typename templ>
+void polynomial<templ>::operator /= (const templ& secObj) {
+	*this = *this / secObj;
+}
+
+template<typename templ>
+void polynomial<templ>::operator %= (const polynomial& p) {
+	*this = *this % p;
+}
+
+template <typename templ>
+void polynomial<templ>::monomial(templ val, int16_t power) {
+	polynomial p;
+	p.pushBack(val, power);
+	*this = p;
+}
+
+template <typename templ>
+templ polynomial<templ>::getValByPower(int16_t power) const {
+	node* temp = this->first;
+	while (temp) {
+		if (temp->power == power) {
+			return temp->val;
+		}
+		temp = temp->next;
+	}
+	return templ(0);
+}
+
+template <typename templ>
+int16_t polynomial<templ>::getMaxPower() {
+	return this->last->power;
+}
+
+template <typename templ>
+templ polynomial <templ>::answerFor(const templ& x) const {
+	if (!isEmpty()) {
+		node* temp = this->first;
+		templ res;
+		do {
+			res += temp->val * (x ^ temp->power);
+			temp = temp->next;
+		} while (temp);
+		return res;
+	}
+	else {
+		throw invalid_argument("Многочлен не имеет элементов!");
+	}
+}
+
+template <typename templ>
+polynomial<templ> polynomial<templ>::derivative() {
+	polynomial res;
+	node* temp = this->first;
+	while (temp) {
+		if (temp->power) {
+			res.pushBack(temp->val * temp->power, temp->power - 1);
+		}
+		temp = temp->next;
+	}
+	return res;
+}
+
+template <typename templ>
+polynomial<GF256> polynomial<templ>::formal_derivative() {
+	if (is_same<templ, GF256>::value) {
+		polynomial res;
+		node* temp = this->first;
+		while (temp) {
+			if (temp->power) {
+				if (temp->power % 2 != 0) {
+					res.pushBack(temp->val * temp->power, temp->power - 1);
+				}
+			}
+			temp = temp->next;
+		}
+		return res;
+	}
+	else {
+		throw invalid_argument("Вы передали объект не типа GF256");
+	}
+}
